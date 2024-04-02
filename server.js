@@ -9,6 +9,8 @@ app.use(express.static(__dirname))
 app.use(bodyParser.json())
 app.use(bodyParser.urlencoded({extended: false}))
 
+mongoose.Promise = Promise
+
 var dbUrl = 'mongodb+srv://frisrsyd:admin123@mongo-db-starter.uscqec7.mongodb.net/?retryWrites=true&w=majority&appName=mongo-db-starter'
 
 var Message = mongoose.model('Message', {
@@ -32,7 +34,14 @@ app.get('/pesan', function (req, res) {
 app.post('/pesan', function (req, res) {
     var message = new Message(req.body)
     message.save().then(() => {
-        // pesan.push(req.body)
+        Message.findOne({pesan: 'badword'}).then((sensor) => {
+            if (sensor) {
+                console.log('badword found', sensor)
+                Message.deleteMany({_id: sensor.id}).then(() => {
+                    console.log('badword removed')
+                })
+            }
+        })
         io.emit('pesan', req.body)
         res.sendStatus(200)
     }).catch((err) => {
