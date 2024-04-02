@@ -1,1 +1,0 @@
-{nama:String, pesan:String} --> Schema definition

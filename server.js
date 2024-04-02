@@ -22,7 +22,7 @@ var Message = mongoose.model('Message', {
 //     { nama: 'fulan', pesan: 'pesan dari fulan'},
 //     { nama: 'ikhsan', pesan: 'pesan dari ikhsan'}
 // ]
-app.get('/pesan', function (req, res) {
+app.get('/pesan', (req, res) => {
     Message.find({}).then((pesan) => {
         res.send(pesan)
     }).catch((err) => {
@@ -31,23 +31,21 @@ app.get('/pesan', function (req, res) {
     })
 })
 
-app.post('/pesan', function (req, res) {
-    var message = new Message(req.body)
-    message.save().then(() => {
-        Message.findOne({pesan: 'badword'}).then((sensor) => {
-            if (sensor) {
-                console.log('badword found', sensor)
-                Message.deleteMany({_id: sensor.id}).then(() => {
-                    console.log('badword removed')
-                })
-            }
-        })
-        io.emit('pesan', req.body)
+app.post('/pesan', async (req, res) => {
+    try{
+        var message = new Message(req.body) 
+        var savedMessage = await message.save()
+        var sensor = await Message.findOne({pesan: 'badword'})
+        if (sensor) 
+            await Message.deleteMany({_id: sensor.id})
+        else 
+            io.emit('pesan', req.body)
+        
         res.sendStatus(200)
-    }).catch((err) => {
+    }catch(err){
         res.sendStatus(500)
         return console.error(err)
-    })
+    }
 })
 
 io.on('connection', function (socket) {
